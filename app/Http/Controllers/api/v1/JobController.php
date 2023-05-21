@@ -8,13 +8,22 @@ use App\Http\Resources\JobCollection;
 use App\Http\Resources\JobResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use App\Services\v1\JobFilter;
 
 class JobController extends Controller
 {
     //api route to get all jobs
-    public function index()
-    {
-        return (new JobCollection(Job::paginate(10)))->response();
+    public function index(
+        Request $request
+    ) {
+        $filter = new JobFilter();
+        $queryItesm = $filter->transform($request);
+        if ($queryItesm == 0) {
+            return (new JobCollection(Job::paginate(10)))->response();
+        } else {
+            $jobs = Job::where($queryItesm)->paginate(10);
+            return new JobCollection($jobs->appends($request->query()));
+        }
     }
 
     //api route to get a single job
